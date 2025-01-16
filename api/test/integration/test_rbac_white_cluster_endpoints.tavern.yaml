@@ -1,35 +1,4 @@
 ---
-test_name: /cluster/local/config
-
-stages:
-
-  - name: Get cluster config
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/local/config"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-    response:
-      status_code: 200
-      json:
-        error: !anyint
-        data:
-          affected_items:
-            - name: !anystr
-              node_name: !anystr
-              node_type: !anystr
-              key: !anystr
-              port: !anyint
-              bind_addr: !anystr
-              nodes: !anything
-              hidden: !anystr
-              disabled: false
-          failed_items: []
-          total_affected_items: 1
-          total_failed_items: 0
-
----
 test_name: GET /cluster/healthcheck
 
 stages:
@@ -63,7 +32,7 @@ stages:
                 - 'worker1'
           total_affected_items: 1
           total_failed_items: 1
-        
+
   - name: Get cluster healtcheck
     request:
       verify: False
@@ -95,57 +64,6 @@ stages:
           total_failed_items: 0
 
 ---
-test_name: GET /cluster/ruleset/synchronization
-
-stages:
-
-  - name: Get cluster ruleset synchronization status (partial response, user agnostic)
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/ruleset/synchronization"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-    response:
-      status_code: 200
-      json:
-        error: 0
-        data:
-          affected_items:
-            - name: 'master-node'
-              synced: !anybool
-            - name: 'worker2'
-              synced: !anybool
-          failed_items: []
-          total_affected_items: 2
-          total_failed_items: 0
-        
----
-test_name: GET /cluster/local/info
-
-stages:
-
-  - name: Get cluster node
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/local/info"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-    response:
-      status_code: 200
-      json:
-        error: !anyint
-        data:
-          affected_items:
-            - cluster: wazuh
-              node: master-node
-              type: master
-          failed_items: []
-          total_affected_items: 1
-          total_failed_items: 0
-        
----
 test_name: GET /cluster/nodes
 
 stages:
@@ -172,7 +90,7 @@ stages:
           failed_items: []
           total_affected_items: 2
           total_failed_items: 0
-        
+
   - name: Get cluster nodes
     request:
       verify: False
@@ -190,7 +108,7 @@ stages:
           failed_items: []
           total_affected_items: 2
           total_failed_items: 0
-        
+
   - name: Filters (type) -> master
     request:
       verify: False
@@ -208,7 +126,7 @@ stages:
           failed_items: []
           total_affected_items: 1
           total_failed_items: 0
-        
+
   - name: Filters (type) -> worker
     request:
       verify: False
@@ -227,7 +145,7 @@ stages:
           failed_items: []
           total_affected_items: 1
           total_failed_items: 0
-        
+
 ---
 test_name: GET /cluster/nodes/{node_id}
 
@@ -267,7 +185,7 @@ stages:
           failed_items: []
           total_affected_items: 1
           total_failed_items: 0
-        
+
   - name: Get cluster (master-node,worker1,worker2) (Allow, Deny, Allow)
     request:
       verify: False
@@ -294,7 +212,7 @@ stages:
                 - 'worker1'
           total_affected_items: 2
           total_failed_items: 1
-        
+
 ---
 test_name: GET /cluster/status
 
@@ -347,11 +265,12 @@ stages:
               sca: !anything
               syscheck: !anything
               syscollector: !anything
-              vulnerability-detector: !anything
+              vulnerability-detection: !anything
+              indexer: !anything
           failed_items: []
           total_affected_items: 1
           total_failed_items: 0
-        
+
   - name: Request (worker1) (Deny)
     request:
       verify: False
@@ -383,7 +302,7 @@ stages:
           failed_items: []
           total_affected_items: 1
           total_failed_items: 0
-        
+
 ---
 test_name: GET /cluster/configuration/validation
 
@@ -409,7 +328,7 @@ stages:
           failed_items: []
           total_affected_items: 2
           total_failed_items: 0
-        
+
   - name: Request cluster validation
     request:
       verify: False
@@ -434,31 +353,6 @@ stages:
                 - worker1
           total_affected_items: 1
           total_failed_items: 1
-        
----
-test_name: GET /cluster/{node_id}/configuration/{component}/{configuration}
-
-stages:
-
-  - name: Try to show the config of analisys/global through a worker
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/worker1/configuration/analysis/global"
-      headers:
-        Authorization: "Bearer {test_login_token}"
-      method: GET
-    response:
-      <<: *permission_denied
-
-  - name: Try to show the config of analisys/global through a worker
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/worker2/configuration/analysis/global"
-      headers:
-        Authorization: "Bearer {test_login_token}"
-      method: GET
-    response:
-      status_code: 200
 
 ---
 test_name: GET /cluster/{node_id}/info
@@ -536,58 +430,6 @@ stages:
       <<: *permission_denied
 
 ---
-test_name: GET /cluster/{node_id}/daemons/stats
-
-stages:
-
-  - name: Request daemons statistics from worker1 (Denied)
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/worker1/daemons/stats"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-    response:
-      <<: *permission_denied
-
-  - name: Request daemons statistics from worker2 (Allow)
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/worker2/daemons/stats"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-    response:
-      status_code: 200
-
----
-test_name: GET /cluster/{node_id}/stats
-
-stages:
-
-  - name: Cluster stats (worker1) today (Deny)
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/worker1/stats"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-    response:
-      <<: *permission_denied
-
-  - name: Cluster stats (worker2) today (Allow)
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/worker2/stats"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-      params:
-        date: "2019-08-27"
-    response:
-      status_code: 200
-
----
 test_name: GET /cluster/{node_id}/status
 
 stages:
@@ -611,36 +453,6 @@ stages:
         Authorization: "Bearer {test_login_token}"
     response:
       <<: *permission_denied
-
----
-test_name: GET /cluster/api/config
-
-stages:
-
-  - name: Request API config (Allowed)
-    request:
-      verify: False
-      url: "{protocol:s}://{host:s}:{port:d}/cluster/api/config"
-      method: GET
-      headers:
-        Authorization: "Bearer {test_login_token}"
-      params:
-        nodes_list: 'worker1,worker2'
-    response:
-      status_code: 200
-      json:
-        error: !anyint
-        data:
-          affected_items:
-            - node_name: 'worker2'
-              node_api_config: !anything
-          failed_items:
-            - error:
-                code: 4000
-              id:
-                - worker1
-          total_affected_items: 1
-          total_failed_items: 1
 
 ---
 test_name: PUT /cluster/restart
